@@ -1,95 +1,78 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client"
 
-export default function Home() {
+import { NextPageContext } from 'next';
+
+import Framework7 from 'framework7/lite-bundle';
+import Framework7React, { App, View } from 'framework7-react';
+import { usePathname } from 'next/navigation'
+
+// Import icons and styles
+import 'framework7/css/bundle';
+
+import 'framework7-icons/css/framework7-icons.css';
+import 'material-icons/iconfont/material-icons.css';
+
+Framework7.use(Framework7React);
+
+// App routes
+const routes = [
+  {
+    path: '/',
+    asyncComponent: () => import('./pages/index'),
+  },
+];
+
+function MyApp({ Component, pageProps }) {
+  // current Next.js route
+  // change the line below to a new v13 NextJS setup per migration guide
+  const pathname = usePathname()
+
+  /*
+    Here we need to know (mostly on server-side) on what URL user opens our app
+  */
+  const url = `${process.env.NEXT_PUBLIC_HOST}${pathname}`;
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    /*
+      Here we pass initial server URL and routes to the Framework7's App.
+      It is required because Framework7 will be initialized on server-side,
+      and we need to know this URL to correctly load pages by Framework7 router
+    */
+    <App url={url} routes={routes}>
+      {/*
+        Create main View.
+        Apparently we need to enable browserHistory to navigating by URL
+      */}
+      <View
+        main
+        browserHistory
+        browserHistorySeparator=""
+        browserHistoryInitialMatch={true}
+        browserHistoryStoreHistory={false}
+        url="/"
+      >
+        {/*
+          Initial page components (returned by Next.js).
+          Here it is mandatory to set `initialPage` prop on it.
+        */}
+        <Component initialPage {...pageProps} />
+      </View>
+    </App>
+  );
 }
+
+/*
+  Required for server-side device detection based on user-agent.
+  Comment this code if you don't need it.
+*/
+
+MyApp.getInitialProps = async ({ ctx }: { ctx: NextPageContext }) => {
+  if (ctx && ctx.req && ctx.req.headers) {
+    return {
+      userAgent: ctx.req.headers['user-agent']
+    }
+  }
+  return {};
+}
+
+export default MyApp;
